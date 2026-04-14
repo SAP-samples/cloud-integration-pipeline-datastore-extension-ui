@@ -1,0 +1,41 @@
+{
+  "name": "DatastoreExtensionUI",
+  "version": "1.0.0",
+  "description": "A simple CAP project.",
+  "repository": "<https://github.com/SAP-samples/cloud-integration-pipeline-datastore-extension-ui.git",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@sap-cloud-sdk/http-client": "^4.1.2",
+    "@sap/cds": "^9",
+    "@sap/xssec": "^4",
+    "dotenv": "^16.4.5",
+    "express": "^4"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@cap-js/cds-types": "^0.13.0",
+    "@cap-js/sqlite": "^2",
+    "@sap/cds-dk": ">=8",
+    "mbt": "^1.2.29",
+    "rimraf": "^5.0.5"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch-datastores-ui": "cds watch --open datastores-ui/webapp/index.html?sap-ui-xx-viewCache=false",
+    "undeploy": "cf undeploy datastore-extension-ui --delete-services --delete-service-keys --delete-service-brokers",
+    "build": "rimraf resources mta_archives && mbt build --mtar archive",
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
+  },
+  "cds": {
+    "requires": {
+      "[production]": {
+        "auth": "xsuaa"
+      }
+  }
+  },
+  "sapux": [
+    "app/datastores-ui"
+  ]
+}

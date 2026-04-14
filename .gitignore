@@ -1,0 +1,35 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# MTA extension descriptors (contain credentials)
+*.mtaext
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+app/*/dist/
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# MTA build artifacts
+mta_archives/
+*.mtar
+
+# SAP specific
+gen/
+resources/
+.appGenInfo.json

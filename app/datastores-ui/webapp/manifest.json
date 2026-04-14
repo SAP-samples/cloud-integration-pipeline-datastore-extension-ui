@@ -1,0 +1,288 @@
+{
+  "_version": "1.76.0",
+  "sap.app": {
+    "id": "Datastore_Extension_UI",
+    "type": "application",
+    "i18n": {
+      "bundleUrl": "i18n/i18n.properties",
+      "supportedLocales": [""],
+      "fallbackLocale": ""
+    },
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:lrop",
+      "version": "1.18.5",
+      "toolsId": "256dbc1a-660e-4dc8-ad0e-a94b41ea262f"
+    },
+    "dataSources": {
+      "mainService": {
+        "uri": "/odata/v4/external/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "odataVersion": "4.0"
+        }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "Datastores-display": {
+          "semanticObject": "Datastores",
+          "action": "display",
+          "title": "{{Datastores-display.flpTitle}}",
+          "subTitle": "{{Datastores-display.flpSubtitle}}",
+          "icon": "sap-icon://detail-more",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": false,
+    "dependencies": {
+      "minUI5Version": "1.139.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "datastoresui.i18n.i18n",
+          "supportedLocales": [""],
+          "fallbackLocale": ""
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      }
+    },
+    "extends": {
+      "extensions": {
+        "sap.ui.controllerExtensions": {
+          "sap.fe.core.controllerextensions.Actions": {
+            "controllerName": "datastoresui.ext.ControllerExt"
+          }
+        }
+      }
+    },
+    "routing": {
+      "config": {},
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "DataStoresList",
+          "target": "DataStoresList"
+        },
+        {
+          "pattern": "DataStores({DataStoreName}):?query:",
+          "name": "DataStoresObjectPage",
+          "target": "DataStoresObjectPage"
+        },
+        {
+          "pattern": "DataStores({DataStoreName})/to_Entries({ID}):?query:",
+          "name": "DataStoreEntryObjectPage",
+          "target": "DataStoreEntryObjectPage"
+        }
+      ],
+      "targets": {
+        "DataStoresList": {
+          "type": "Component",
+          "id": "DataStoresList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "header": {
+              "actions": {
+                "sendEmail": {
+                  "visible": false
+                },
+                "shareInJam": {
+                  "visible": false
+                }
+              }
+            },
+            "settings": {
+              "contextPath": "/DataStores",
+              "variantManagement": "None",
+              "initialLoad": "Enabled",
+              "hideFilterBar": false,
+              "navigation": {
+                "DataStores": {
+                  "detail": {
+                    "route": "DataStoresObjectPage"
+                  }
+                }
+              },
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "ResponsiveTable",
+                    "selectionMode": "None",
+                    "selectAll": false,
+                    "personalization": false
+                  }
+                },
+                "@com.sap.vocabularies.UI.v1.SelectionFields": {
+                  "filterFields": {
+                    "DataStoreName": {
+                      "availability": "Default"
+                    },
+                    "NumberOfMessages": {
+                      "availability": "Default"
+                    },
+                    "NumberOfOverdueMessages": {
+                      "availability": "Default"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "DataStoresObjectPage": {
+          "type": "Component",
+          "id": "DataStoresObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "contextPath": "/DataStores",
+              "navigation": {
+                "to_Entries": {
+                  "detail": {
+                    "route": "DataStoreEntryObjectPage"
+                  }
+                }
+              },
+              "controlConfiguration": {
+                "to_Entries/@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "GridTable",
+                    "selectionMode": "Multi",
+                    "selectAll": true,
+                    "enableNavigation": false,
+                    "rowCountMode": "Fixed",
+                    "rowCount": 20,
+                    "enableAutoColumnWidth": true
+                  },
+                  "filters": {
+                    "enabled": true,
+                    "liveMode": true
+                  },
+                  "actions": {
+                    "FilterInfo": {
+                      "text": "Filter & Sort Help",
+                      "press": "datastoresui.ext.CustomActions.onShowFilterInfo",
+                      "requiresSelection": false,
+                      "icon": "sap-icon://hint"
+                    },
+                    "MoveToNoRetry": {
+                      "text": "Move to No-Retry",
+                      "press": "datastoresui.ext.CustomActions.onMoveToNoRetry",
+                      "requiresSelection": true,
+                      "visible": "datastoresui.ext.CustomActions.isMoveToNoRetryVisible"
+                    },
+                    "Restart": {
+                      "text": "Restart",
+                      "press": "datastoresui.ext.CustomActions.onRestart",
+                      "requiresSelection": true
+                    },
+                    "MoveToDataStore": {
+                      "text": "Move to Datastore",
+                      "press": "datastoresui.ext.CustomActions.onMoveToDataStore",
+                      "requiresSelection": true
+                    },
+                    "DeleteMessage": {
+                      "text": "Delete",
+                      "press": "datastoresui.ext.CustomActions.onDeleteMessage",
+                      "requiresSelection": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "DataStoreEntryObjectPage": {
+          "type": "Component",
+          "id": "DataStoreEntryObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "contextPath": "/DataStores/to_Entries",
+              "content": {
+                "header": {
+                  "actions": {
+                    "MoveToNoRetryDetailEntry": {
+                      "text": "Move to No-Retry",
+                      "press": "datastoresui.ext.CustomActions.onMoveToNoRetryDetailEntry",
+                      "enabled": true,
+                      "visible": "datastoresui.ext.CustomActions.isMoveToNoRetryVisibleDetail"
+                    },
+                    "RestartDetailEntry": {
+                      "text": "Restart",
+                      "press": "datastoresui.ext.CustomActions.onRestartDetailEntry",
+                      "enabled": true
+                    },
+                    "MoveToDataStoreDetailEntry": {
+                      "text": "Move to Datastore",
+                      "press": "datastoresui.ext.CustomActions.onMoveToDataStoreDetailEntry",
+                      "enabled": true
+                    },
+                    "DeleteDetailEntry": {
+                      "text": "Delete",
+                      "press": "datastoresui.ext.CustomActions.onDeleteDetailEntry",
+                      "enabled": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "sap.fiori": {
+    "registrationIds": [],
+    "archeType": "transactional"
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "managedapprouter"
+  }
+}

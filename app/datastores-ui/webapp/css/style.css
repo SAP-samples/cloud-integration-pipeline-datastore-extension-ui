@@ -1,0 +1,5 @@
+/* Hide the non-functional Reset button in the table P13n filter/sort dialog */
+.sapMBtn[id$="-resetBtn"],
+[id$="-resetBtn"] {
+    display: none !important;
+}

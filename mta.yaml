@@ -1,0 +1,133 @@
+_schema-version: 3.3.0
+ID: datastore-extension-ui
+description: A simple CAP project.
+version: 1.0.0
+modules:
+- name: datastore-extension-ui-srv
+  type: nodejs
+  path: gen/srv
+  requires:
+  - name: uaa_datastore-extension-ui
+  - name: datastore-extension-ui-destination-service
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  properties:
+    OAUTH_TOKEN_URL: REPLACE_VIA_MTAEXT
+    OAUTH_CLIENT_ID: REPLACE_VIA_MTAEXT
+    OAUTH_CLIENT_SECRET: REPLACE_VIA_MTAEXT
+    API_BASE_URL: REPLACE_VIA_MTAEXT
+  parameters:
+    buildpack: nodejs_buildpack
+    instances: 1
+    memory: 512M
+  build-parameters:
+    builder: npm-ci
+- name: datastore-extension-ui-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: datastore-extension-ui-destination-service
+    parameters:
+      content-target: true
+  - name: datastore-extension-ui_html_repo_host
+    parameters:
+      service-key:
+        name: datastore-extension-ui_html_repo_host-key
+  - name: uaa_datastore-extension-ui
+    parameters:
+      service-key:
+        name: uaa_datastore-extension-ui-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: managedapprouter_datastore-extension-ui_html_repo_host
+          ServiceInstanceName: datastore-extension-ui-html5-app-host-service
+          ServiceKeyName: datastore-extension-ui_html_repo_host-key
+          sap.cloud.service: managedapprouter
+        - Authentication: OAuth2UserTokenExchange
+          Name: managedapprouter_uaa_datastore-extension-ui
+          ServiceInstanceName: datastore-extension-ui-xsuaa-service
+          ServiceKeyName: uaa_datastore-extension-ui-key
+          sap.cloud.service: managedapprouter
+        existing_destinations_policy: ignore
+  build-parameters:
+    no-source: true
+- name: datastore-extension-ui-app-content
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: datastore-extension-ui_html_repo_host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - datastoresui.zip
+      name: datastoresui
+      target-path: resources/
+- name: datastoresui
+  type: html5
+  path: app/datastores-ui
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: datastore-extension-ui-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          - Authentication: NoAuthentication
+            HTML5.DynamicDestination: true
+            HTML5.ForwardAuthToken: true
+            Name: srv-api
+            ProxyType: Internet
+            Type: HTTP
+            URL: ~{srv-api/srv-url}
+          existing_destinations_policy: update
+      version: 1.0.0
+    service: destination
+    service-name: datastore-extension-ui-destination-service
+    service-plan: lite
+  requires:
+  - name: srv-api
+- name: datastore-extension-ui_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: datastore-extension-ui-html5-app-host-service
+    service-plan: app-host
+- name: uaa_datastore-extension-ui
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      tenant-mode: dedicated
+      xsappname: datastore-extension-ui
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: datastore-extension-ui-xsuaa-service
+    service-plan: application
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+  - builder: custom
+    commands:
+    - npm ci
+    - npx cds build --production
