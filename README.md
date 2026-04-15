@@ -8,7 +8,7 @@ This is a CAP/SAP Fiori Elements application for managing datastore entries. The
 
 This application connects to the HTTP API Integration Flows of the Pipeline Extension package and provides a user-friendly interface to inspect, restart, move, and delete datastore entries — without requiring direct API calls or an API client like Postman.
 
-You can find a detailed description of the project including screenshots of the UI in this blog post [here](https://community.sap.com/t5/integration-blog-posts/cloud-integration-pipeline-datastore-extension-ui/ba-p/14326020).
+You can find a detailed description of the project including screenshots of the UI [in this blog post](https://community.sap.com/t5/integration-blog-posts/cloud-integration-pipeline-datastore-extension-ui/ba-p/14326020).
 
 ### Features
 
