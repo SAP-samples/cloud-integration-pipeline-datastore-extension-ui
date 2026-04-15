@@ -34,7 +34,7 @@ You can find a detailed description of the project including screenshots of the 
 - OAuth credentials (Client ID, Client Secret, Token URL) for the Cloud Integration runtime
 - For Cloud Foundry deployment: Cloud Foundry CLI with the MTA plugin + a SAP Build Work Uone subscription 
 
-## Download and Installation
+## Installation
 
 ### Quick Start (local)
 
