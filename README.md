@@ -4,21 +4,21 @@
 
 ## Description
 
-A SAP Fiori Elements UI application for managing Data Store entries created by the [Process Integration Pipeline Extension - Restart via Data Store](https://hub.sap.com/package/processintegrationpipelineextensionrestartviadatastore/overview) package on SAP Cloud Integration.
+A CAP/SAP Fiori Elements application for managing Datastore entries. The application uses the [Process Integration Pipeline Extension - Restart via Data Store](https://hub.sap.com/package/processintegrationpipelineextensionrestartviadatastore/overview) package on SAP Cloud Integration.
 
-This application connects to the optional HTTP API Integration Flows of the Pipeline Extension package and provides a user-friendly interface to inspect, restart, move, and delete Data Store entries — without requiring direct API calls or Postman.
+This application connects to the HTTP API Integration Flows of the Pipeline Extension package and provides a user-friendly interface to inspect, restart, move, and delete Datastore entries — without requiring direct API calls or an API client like Postman.
 
 ### Features
 
 - **DataStore Overview**: View all Global datastores with message counts and overdue message indicators
 - **DataStore Entry Overview**: View all messages of a datastore and their properties (Scenario ID, Processing Stage, Receiver, Number of Restarts, etc.)
-- **Filtering**: Filter datastores and entries by various criteria (contains, equals, between)
+- **Filtering**: Filter datastores and entries by various criteria 
 - **Bulk Operations**: Apply operations to multiple selected entries or all filtered entries at once
   - **Restart**: Retry failed message processing
-  - **Delete**: Permanently remove entries
-  - **Move to No-Retry**: Move entries to the NoRetry datastore
+  - **Delete**: Permanently remove message
+  - **Move to No-Retry**: Move entries to a NoRetry datastore
   - **Move to DataStore**: Move entries to any target datastore
-- **Error Analysis**: Inspect error messages, HTTP response headers, and processing metadata per entry
+- **Error Analysis**: Inspect error messages, HTTP response headers, and metadata per message
 - **Payload Decoding**: Decode base64-encoded message payloads on demand
 - **Detail Page Actions**: Restart, delete, and move actions directly on the detail page of each message
 
@@ -65,7 +65,7 @@ This application connects to the optional HTTP API Integration Flows of the Pipe
    cds watch
    ```
 
-5. **Access the UI** — Open the URL shown in the terminal (e.g., `http://localhost:4004`) and click on `/datastores-ui/webapp/index.html`
+5. **Access the UI** — Open the URL shown in the terminal (e.g., `http://localhost:4004`) and click on `/datastores-ui/webapp`
 
 ### Cloud Foundry Deployment
 
@@ -73,8 +73,9 @@ For deployment to SAP BTP Cloud Foundry, see [CONFIGURATION.md](CONFIGURATION.md
 
 ## Known Issues
 
-- Filter operators `starts with`, `ends with`, and `not equal to` are not supported for DataStore entries. Supported operators are: `contains`, `equal to`, and `between`.
-- Sorting on the DataStore entries table is only supported for `UTCTimestampOfError` and `NumberOfDSRestarts`.
+- Filter operators `starts with`, `ends with`, and `not equal to` are not supported for datastore entries. Supported operators are: `contains`, `equal to`, and `between`.
+- Closing the filter banner does not refresh the data in the datastore entries table, in this case you need to refresh the page to reset the table (alternatively, remove the filters in the filter menu instead of closing the banner in the first place)
+
 
 ## How to obtain support
 
