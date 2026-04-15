@@ -30,7 +30,7 @@ This application connects to the HTTP API Integration Flows of the Pipeline Exte
   - **Pipeline API - Data Store Manage Retries** (provides the `/dsretry` endpoint)
   - **Pipeline API - Data Store Manage Entries** (provides the `/dsentry` endpoint)
 - OAuth credentials (Client ID, Client Secret, Token URL) for the Cloud Integration runtime
-- For Cloud Foundry deployment: Cloud Foundry CLI with the MTA plugin
+- For Cloud Foundry deployment: Cloud Foundry CLI with the MTA plugin + a SAP Build Workzone subscription 
 
 ## Download and Installation
 
