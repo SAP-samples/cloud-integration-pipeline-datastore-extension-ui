@@ -50,7 +50,7 @@ The application will validate that all environment variables are set on startup 
 
 ------------------------------------------------------------------------------------------------------
 
-## Cloud Foundry Deployment (MTA)
+## Cloud Foundry Deployment 
 
 ### Prerequisite: Log in and target your space
 
@@ -119,7 +119,7 @@ Check that:
 - `OAUTH_CLIENT_ID` and `OAUTH_CLIENT_SECRET` are valid
 - The OAuth server is accessible from your network
 
-## Other issues
+### Other issues
 
 Check the application logs:
 
