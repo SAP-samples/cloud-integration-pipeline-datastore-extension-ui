@@ -4,7 +4,7 @@
 
 ## Description
 
-A CAP/SAP Fiori Elements application for managing datastore entries. The application uses the [Process Integration Pipeline Extension - Restart via Data Store](https://hub.sap.com/package/processintegrationpipelineextensionrestartviadatastore/overview) package on SAP Cloud Integration.
+A CAP/SAP Fiori Elements application for managing datastore entries. The application uses the [Process Integration Pipeline Extension - Restart via Data Store](https://hub.sap.com/package/processintegrationpipelineextensionrestartviadatastore/overview) package.
 
 This application connects to the HTTP API Integration Flows of the Pipeline Extension package and provides a user-friendly interface to inspect, restart, move, and delete Datastore entries — without requiring direct API calls or an API client like Postman.
 
