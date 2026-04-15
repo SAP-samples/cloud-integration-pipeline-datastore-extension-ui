@@ -1,8 +1,5 @@
-# Data Store Retry UI - Configuration Guide
+# Configuration Guide
 
-## Overview
-
-This application retrieves data from an external Data Store Retry API and provides a UI for managing data store entries. Before deploying, you must configure the OAuth credentials and API endpoint.
 
 ## Configuration Requirements
 
@@ -32,6 +29,8 @@ OAUTH_CLIENT_SECRET=your-secret-here
 API_BASE_URL=https://your-api-endpoint/http/pipeline/api/v1
 ```
 
+> **Note**: The `.env` file is git-ignored and will NOT be committed. 
+
 ### Step 3: Run the application
 
 ```bash
@@ -46,7 +45,7 @@ npm install -g @sap/cds-dk
 cds watch
 ```
 
-The application will validate that all environment variables are set and log them on startup.
+The application will validate that all environment variables are set on startup and throw an error if any are missing.
 
 
 ------------------------------------------------------------------------------------------------------
@@ -55,7 +54,7 @@ The application will validate that all environment variables are set and log the
 
 ### Prerequisite: Log in and target your space
 
-Make sure you are logged in to the correct landscape, org, and space before deploying:
+Make sure you are logged in to the correct Cloud Foundry landscape, org, and space before deploying:
 
 ```bash
 cf login -a https://api.<region>.hana.ondemand.com
@@ -86,7 +85,7 @@ modules:
     API_BASE_URL: https://your-api-endpoint/http/pipeline/api/v1
 ```
 
-> **Note**: The `credentials.mtaext` file is git-ignored and will NOT be committed to the repository. Only the `.template` file is tracked.
+> **Note**: The `credentials.mtaext` file is git-ignored and will NOT be committed. Only the `.template` file is tracked.
 
 ### Step 2: Build and Deploy
 
@@ -100,7 +99,7 @@ cf deploy mta_archives/datastore-extension-ui_1.0.0.mtar -e credentials.mtaext
 You can access the successfully deployed application under the "HTML5 Applications" tab in the BTP Cockpit of your BTP subaccount. 
 
 - Your subaccount > HTML5 Applications > search for: Datastore_Extension_UI
-- If you can access the application here, you can now also add it to SAP Build Workzone and use this as the entry point. 
+- You can now also add it to SAP Build Workzone (see instructions below) and access the application from there. 
 
 ## Troubleshooting
 
@@ -120,32 +119,26 @@ Check that:
 - `OAUTH_CLIENT_ID` and `OAUTH_CLIENT_SECRET` are valid
 - The OAuth server is accessible from your network
 
-### Generic error messages (e.g. "Delete failed. Please try again later.")
+## Other issues
 
-For security, the UI only shows generic error messages. To see the actual error details, check the **server-side application logs**:
+Check the application logs:
 
 ```bash
 # Local development
-cds watch  # Look at terminal output for [external-service] - ERROR lines
+cds watch  # Errors appear in terminal under [external-service]
 
 # Cloud Foundry
+cf logs datastore-extension-ui-srv
 cf logs datastore-extension-ui-srv --recent
 ```
 
-All errors are logged under the `external-service` log category with full details (HTTP status codes, error messages, stack traces). These details are never sent to the browser.
-
-### "CSRF token acquisition failed"
-
-Check that:
-- `API_BASE_URL` is correct
-- The Data Store Retry API is accessible
-- Your OAuth token has required scopes/permissions
+Look for `[external-service]` log entries to diagnose API communication issues.
 
 ---
 
 ## Adding the App to SAP Build Work Zone (Optional) 
 
-After a successful deployment, you can make the application accessible via the SAP Build Work Zone launchpad. The necessary technical configuration (Fiori Launchpad tile definition) is already included in the code — you only need to register and configure it in the Work Zone portal.
+After a successful deployment, you can make the application accessible via the SAP Build Work Zone launchpad. The necessary technical configuration is already included in the code — you only need to register and configure it in the Work Zone portal.
 
 ### Prerequisites
 
@@ -162,7 +155,7 @@ After a successful deployment, you can make the application accessible via the S
 
 1. Open the **Content Manager** menu.
 2. Click **Content Explorer** and then the **HTML5 Apps** tile.
-3. You should see `Cloud Integration Pipeline - Datastore Extension UI` (or similar) in the list. Select its checkbox and click **Add**.
+3. You should see `Cloud Integration Pipeline - Datastore Extension UI` in the list. Select its checkbox and click **Add**.
 
 ### Step 3: Create a Group
 
@@ -175,25 +168,9 @@ After a successful deployment, you can make the application accessible via the S
 1. In **Content Manager**, select the **Everyone** role.
 2. Click **Edit** and enable the toggle for this app. Click **Save**.
 
-### Step 5: Create (or reuse) a Launchpad Site
+### Step 5: Add to (or create) a Launchpad Site
 
 1. Navigate to **Site Directory** and add the app to an existing site OR click **Create Site**.
 2. Give the site a name (e.g. `POC Test Dashboard`) and click **Create**.
 3. Open the site — the tile for this application should now appear on the launchpad.
 
----
-
-## Support
-
-For issues or questions, check the application logs:
-
-```bash
-# Local development
-cds watch  # Errors appear in terminal under [external-service]
-
-# Cloud Foundry
-cf logs datastore-extension-ui-srv
-cf logs datastore-extension-ui-srv --recent
-```
-
-Look for `[external-service]` log entries to diagnose API communication issues.
