@@ -136,7 +136,7 @@ Look for `[external-service]` log entries to diagnose API communication issues.
 
 ---
 
-## Adding the App to SAP Build Work Zone (Optional) 
+## Adding the Application to SAP Build Work Zone (Optional) 
 
 After a successful deployment, you can make the application accessible via the SAP Build Work Zone launchpad. The necessary technical configuration is already included in the code — you only need to register and configure it in the Work Zone portal.
 
