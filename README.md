@@ -6,18 +6,18 @@
 
 A CAP/SAP Fiori Elements application for managing datastore entries. The application uses the [Process Integration Pipeline Extension - Restart via Data Store](https://hub.sap.com/package/processintegrationpipelineextensionrestartviadatastore/overview) package.
 
-This application connects to the HTTP API Integration Flows of the Pipeline Extension package and provides a user-friendly interface to inspect, restart, move, and delete Datastore entries — without requiring direct API calls or an API client like Postman.
+This application connects to the HTTP API Integration Flows of the Pipeline Extension package and provides a user-friendly interface to inspect, restart, move, and delete datastore entries — without requiring direct API calls or an API client like Postman.
 
 ### Features
 
-- **DataStore Overview**: View all Global datastores with message counts and overdue message indicators
-- **DataStore Entry Overview**: View all messages of a datastore and their properties (Scenario ID, Processing Stage, Receiver, Number of Restarts, etc.)
+- **Datastore Overview**: View all Global datastores with message counts and overdue message indicators
+- **Datastore Entry Overview**: View all messages of a datastore and their properties (Scenario ID, Processing Stage, Receiver, Number of Restarts, etc.)
 - **Filtering**: Filter datastores and entries by various criteria 
 - **Bulk Operations**: Apply operations to multiple selected entries or all filtered entries at once
   - **Restart**: Retry failed message processing
   - **Delete**: Permanently remove message
-  - **Move to No-Retry**: Move entries to a NoRetry datastore
-  - **Move to DataStore**: Move entries to any target datastore
+  - **Move to No-Retry datastore**: Move entries to a NoRetry datastore
+  - **Move to Datastore**: Move entries to any target datastore
 - **Error Analysis**: Inspect error messages, HTTP response headers, and metadata per message
 - **Payload Decoding**: Decode base64-encoded message payloads on demand
 - **Detail Page Actions**: Restart, delete, and move actions directly on the detail page of each message
