@@ -20,6 +20,8 @@ The application requires **4 environment variables** to be set:
 cp .env.example .env
 ```
 
+> **Note**: The `.env` file is git-ignored and will NOT be committed. 
+
 ### Step 2: Edit .env with your values
 
 ```bash
@@ -28,8 +30,6 @@ OAUTH_CLIENT_ID=your-client-id
 OAUTH_CLIENT_SECRET=your-secret-here
 API_BASE_URL=https://your-api-endpoint/http/pipeline/api/v1
 ```
-
-> **Note**: The `.env` file is git-ignored and will NOT be committed. 
 
 ### Step 3: Run the application
 
