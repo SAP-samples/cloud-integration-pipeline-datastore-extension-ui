@@ -32,7 +32,7 @@ You can find a detailed description of the project including screenshots of the 
   - **Pipeline API - Data Store Manage Retries** (provides the `/dsretry` endpoint)
   - **Pipeline API - Data Store Manage Entries** (provides the `/dsentry` endpoint)
 - OAuth credentials (Client ID, Client Secret, Token URL) for the Cloud Integration runtime
-- For Cloud Foundry deployment: Cloud Foundry CLI with the MTA plugin + a SAP Build Work Uone subscription 
+- For Cloud Foundry deployment: Cloud Foundry CLI with the MTA plugin + a SAP Build Work Zone subscription 
 
 ## Installation
 
