@@ -181,6 +181,18 @@
           "options": {
             "settings": {
               "contextPath": "/DataStores",
+              "content": {
+                "header": {
+                  "actions": {
+                    "BackToHome": {
+                      "text": "Navigate Back",
+                      "press": "datastoresui.ext.CustomActions.onBackToHome",
+                      "enabled": true,
+                      "icon": "sap-icon://nav-back"
+                    }
+                  }
+                }
+              },
               "navigation": {
                 "to_Entries": {
                   "detail": {
@@ -247,6 +259,12 @@
               "content": {
                 "header": {
                   "actions": {
+                    "BackToHome": {
+                      "text": "Navigate Back",
+                      "press": "datastoresui.ext.CustomActions.onBackToHome",
+                      "enabled": true,
+                      "icon": "sap-icon://nav-back"
+                    },
                     "MoveToNoRetryDetailEntry": {
                       "text": "Move to No-Retry",
                       "press": "datastoresui.ext.CustomActions.onMoveToNoRetryDetailEntry",

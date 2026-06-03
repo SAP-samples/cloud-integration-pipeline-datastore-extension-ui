@@ -280,6 +280,17 @@ sap.ui.define([], function () {
   }
 
   return {
+    // Navigate back to the home page (DataStores list)
+    onBackToHome: function (oContext) {
+      var oExtensionAPI = this;
+      var oAppComponent = oExtensionAPI.getAppComponent ? oExtensionAPI.getAppComponent() : null;
+      if (oAppComponent) {
+        oAppComponent.getRouter().navTo("DataStoresList");
+      } else {
+        window.history.back();
+      }
+    },
+
     // Show filter and sort help information dialog
     onShowFilterInfo: function (oContext) {
       _showFilterInfoDialog();
