@@ -22,6 +22,7 @@
     "rimraf": "^5.0.5"
   },
   "scripts": {
+    "lint": "eslint .",
     "start": "cds-serve",
     "watch-datastores-ui": "cds watch --open datastores-ui/webapp/index.html?sap-ui-xx-viewCache=false",
     "undeploy": "cf undeploy datastore-extension-ui --delete-services --delete-service-keys --delete-service-brokers",
