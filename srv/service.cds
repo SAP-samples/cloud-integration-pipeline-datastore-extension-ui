@@ -1,5 +1,11 @@
 service ExternalService {
 
+    @readonly
+    entity Tenants {
+        key id    : String;
+            label : String;
+    }
+
     @Capabilities.Deletable: false
     @Capabilities.Updatable: false
     entity DataStores {

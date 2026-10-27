@@ -12,9 +12,10 @@ You can find a detailed description of the project including screenshots of the 
 
 ### Features
 
+- **Multi-Tenant Support**: Switch between multiple SAP Cloud Integration environments (DEV, RTE, Pre-Prod, etc.) without redeployment using the "Select Tenant" button
 - **Datastore Overview**: View all **global** datastores with message counts and overdue message indicators
 - **Datastore Entry Overview**: View all messages of a datastore and their properties (Scenario ID, Processing Stage, Receiver, Number of Restarts, etc.)
-- **Filtering**: Filter datastores and entries by various criteria 
+- **Filtering**: Filter datastores and entries by various criteria
 - **Bulk Operations**: Apply operations to multiple selected entries or all filtered entries at once
   - **Restart**: Retry failed message processing
   - **Delete**: Permanently remove message
@@ -53,9 +54,9 @@ You can find a detailed description of the project including screenshots of the 
    ```bash
    cp .env.example .env
    ```
-   Edit `.env` with your OAuth credentials and API endpoint. See [CONFIGURATION.md](CONFIGURATION.md) for details.
+   Edit `.env` and set `TENANTS_CONFIG` to a JSON array with your OAuth credentials and API endpoint for each tenant. See [CONFIGURATION.md](CONFIGURATION.md) for the exact format and where to find the credentials.
 
-   > **Important**: Do not use quotation marks around values in the `.env` file.
+   > **Important**: The `TENANTS_CONFIG` value must be on a single line in the `.env` file.
 
 4. **Start the application**
    ```bash

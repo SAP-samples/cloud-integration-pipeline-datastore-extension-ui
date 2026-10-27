@@ -14,10 +14,7 @@ modules:
     properties:
       srv-url: ${default-url}
   properties:
-    OAUTH_TOKEN_URL: REPLACE_VIA_MTAEXT
-    OAUTH_CLIENT_ID: REPLACE_VIA_MTAEXT
-    OAUTH_CLIENT_SECRET: REPLACE_VIA_MTAEXT
-    API_BASE_URL: REPLACE_VIA_MTAEXT
+    TENANTS_CONFIG: REPLACE_VIA_MTAEXT
   parameters:
     buildpack: nodejs_buildpack
     instances: 1

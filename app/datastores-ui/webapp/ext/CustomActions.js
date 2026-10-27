@@ -13,7 +13,6 @@ sap.ui.define([], function () {
     if (sBase.slice(-1) !== "/") { sBase += "/"; }
     return sBase;
   }
-
   // Check if the current DataStore is a NoRetry datastore
   // Returns true if DataStoreName ends with "NoRetry" (case-insensitive)
   function _isNoRetryDataStore(oContext) {
@@ -280,6 +279,103 @@ sap.ui.define([], function () {
   }
 
   return {
+    // Open a dialog to select the active tenant; reloads the page after switching
+    onSwitchTenant: function (oContext) {
+      sap.ui.require([
+        "sap/m/Dialog", "sap/m/Button", "sap/m/Select",
+        "sap/ui/core/ListItem", "sap/m/MessageBox", "sap/m/Label", "sap/m/VBox",
+        "sap/ui/core/Component"
+      ], function (Dialog, Button, Select, ListItem, MessageBox, Label, VBox, UIComponent) {
+        var sCurrentId = sessionStorage.getItem("datastores_tenantId") || "";
+
+        // Find app component via proper module (sap.ui.core.Component global not guaranteed)
+        var oOwnerComp = null;
+        try {
+          var oAllComps = UIComponent.registry.all();
+          for (var sId in oAllComps) {
+            if (oAllComps[sId].getMetadata && oAllComps[sId].getMetadata().getName() === "datastoresui.Component") {
+              oOwnerComp = oAllComps[sId];
+              break;
+            }
+          }
+        } catch (e) {
+          console.error("[Tenant] Component registry access failed:", e);
+        }
+
+        function _showDialog(aTenantsToShow) {
+          if (aTenantsToShow.length === 0) {
+            MessageBox.warning("No tenants configured. Add TENANTS_CONFIG to your environment.", { title: "No Tenants Found" });
+            return;
+          }
+          var oSelect = new Select({ width: "100%" });
+          aTenantsToShow.forEach(function (t) {
+            oSelect.addItem(new ListItem({ key: t.id, text: t.label }));
+          });
+          if (sCurrentId) { oSelect.setSelectedKey(sCurrentId); }
+          var oDialog = new Dialog({
+            title: "Select Tenant",
+            contentWidth: "320px",
+            content: new VBox({
+              items: [
+                new Label({ text: "Environment:", labelFor: oSelect }),
+                oSelect
+              ]
+            }).addStyleClass("sapUiSmallMargin"),
+            beginButton: new Button({
+              text: "Switch",
+              type: "Emphasized",
+              press: function () {
+                var sSelected = oSelect.getSelectedKey();
+                if (!sSelected) {
+                  MessageBox.warning("Please select a tenant.");
+                  return;
+                }
+                sessionStorage.setItem("datastores_tenantId", sSelected);
+                oDialog.close();
+                window.location.reload();
+              }
+            }),
+            endButton: new Button({
+              text: "Cancel",
+              press: function () { oDialog.close(); }
+            }),
+            afterClose: function () { oDialog.destroy(); }
+          });
+          oDialog.open();
+        }
+
+        var oTenantModel = oOwnerComp && oOwnerComp.getModel("tenantModel");
+        var aTenants = (oTenantModel && oTenantModel.getProperty("/tenants")) || [];
+
+        if (aTenants.length > 0) {
+          _showDialog(aTenants);
+        } else {
+          // tenantModel not yet ready — fall back to OData model binding
+          var oModel = oOwnerComp && oOwnerComp.getModel();
+          if (!oModel) {
+            MessageBox.error("Could not access data model. Please reload the page.", { title: "Tenant Error" });
+            return;
+          }
+          oModel.bindList("/Tenants").requestContexts(0, 100)
+            .then(function (aContexts) {
+              _showDialog(aContexts.map(function (c) { return c.getObject(); }));
+            })
+            .catch(function (err) {
+              MessageBox.error("Could not load tenants: " + (err && err.message ? err.message : String(err)), { title: "Tenant Error" });
+            });
+        }
+      });
+    },
+
+    // Handle tenant selection change from the filter bar dropdown (unused, kept for compatibility)
+    onTenantFilterChange: function (oEvent) {
+      var sSelectedKey = oEvent.getSource().getSelectedKey();
+      if (sSelectedKey) {
+        sessionStorage.setItem("datastores_tenantId", sSelectedKey);
+        window.location.reload();
+      }
+    },
+
     // Navigate back to the home page (DataStores list)
     onBackToHome: function (oContext) {
       var oExtensionAPI = this;

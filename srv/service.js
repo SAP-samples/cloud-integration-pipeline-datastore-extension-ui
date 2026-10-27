@@ -8,48 +8,69 @@ const LOG = cds.log('external-service');
 
 const { executeHttpRequest } = require('@sap-cloud-sdk/http-client');
 
-// External API configuration - read from environment variables
-const ENV_CONFIG = {
-  OAUTH_TOKEN_URL: process.env.OAUTH_TOKEN_URL,
-  OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID,
-  OAUTH_CLIENT_SECRET: process.env.OAUTH_CLIENT_SECRET,
-  API_BASE_URL: process.env.API_BASE_URL // Data Store Retry API base URL (without trailing slash)
-};
-
-// Validate that all required environment variables are set
-function validateEnvironmentVariables() {
-  const required = ['OAUTH_TOKEN_URL', 'OAUTH_CLIENT_ID', 'OAUTH_CLIENT_SECRET', 'API_BASE_URL'];
-  const missing = required.filter(key => !ENV_CONFIG[key]);
-  
-  if (missing.length > 0) {
-    const errorMsg = `Missing required environment variables: ${missing.join(', ')}.\n` +
-      `Please set these variables before starting the application:\n` +
-      `  OAUTH_TOKEN_URL=${ENV_CONFIG.OAUTH_TOKEN_URL || 'https://your-auth-endpoint/oauth/token'}\n` +
-      `  OAUTH_CLIENT_ID=${ENV_CONFIG.OAUTH_CLIENT_ID || 'your-client-id'}\n` +
-      `  OAUTH_CLIENT_SECRET=${ENV_CONFIG.OAUTH_CLIENT_SECRET || '***'}\n` +
-      `  API_BASE_URL=${ENV_CONFIG.API_BASE_URL || 'https://your-api-endpoint/http/pipeline/api/v1'}`;
-    throw new Error(errorMsg);
+// Returns the full list of tenant configs.
+// If TENANTS_CONFIG (JSON array) is set, it is used.
+// Otherwise falls back to the four legacy single-tenant env vars.
+function getTenantsConfig() {
+  const raw = process.env.TENANTS_CONFIG;
+  if (raw) {
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      throw new Error('TENANTS_CONFIG is not valid JSON: ' + e.message);
+    }
   }
-
+  // Legacy single-tenant fallback
+  return [{
+    id: 'default',
+    label: process.env.TENANT_LABEL || 'Default',
+    oauthUrl: process.env.OAUTH_TOKEN_URL,
+    clientId: process.env.OAUTH_CLIENT_ID,
+    clientSecret: process.env.OAUTH_CLIENT_SECRET,
+    apiBaseUrl: process.env.API_BASE_URL
+  }];
 }
 
-// Helper function to get OAuth access token
-async function getAccessToken() {
+// Returns the config for the requested tenant id.
+// Falls back to the first configured tenant if id is missing or not found.
+function getTenantConfig(tenantId) {
+  const tenants = getTenantsConfig();
+  if (!tenantId) return tenants[0];
+  return tenants.find(t => t.id === tenantId) || tenants[0];
+}
+
+// Validate that all required fields are present for every configured tenant
+function validateEnvironmentVariables() {
+  const tenants = getTenantsConfig();
+  const required = ['oauthUrl', 'clientId', 'clientSecret', 'apiBaseUrl'];
+  tenants.forEach(t => {
+    const missing = required.filter(k => !t[k]);
+    if (missing.length > 0) {
+      throw new Error(
+        `Tenant "${t.id || 'default'}" is missing required fields: ${missing.join(', ')}.\n` +
+        `Check your TENANTS_CONFIG (or legacy OAUTH_TOKEN_URL / OAUTH_CLIENT_ID / OAUTH_CLIENT_SECRET / API_BASE_URL).`
+      );
+    }
+  });
+}
+
+// Helper function to get OAuth access token for a specific tenant
+async function getAccessToken(tenant) {
   const tokenResponse = await executeHttpRequest(
-    { url: ENV_CONFIG.OAUTH_TOKEN_URL },
+    { url: tenant.oauthUrl },
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      data: `grant_type=client_credentials&client_id=${encodeURIComponent(ENV_CONFIG.OAUTH_CLIENT_ID)}&client_secret=${encodeURIComponent(ENV_CONFIG.OAUTH_CLIENT_SECRET)}`
+      data: `grant_type=client_credentials&client_id=${encodeURIComponent(tenant.clientId)}&client_secret=${encodeURIComponent(tenant.clientSecret)}`
     },
     { fetchCsrfToken: false }
   );
-  
+
   const accessToken = tokenResponse.data && tokenResponse.data.access_token;
   if (!accessToken) {
     throw new Error('Failed to obtain access token from OAuth endpoint');
   }
-  
+
   return accessToken;
 }
 
@@ -99,16 +120,22 @@ function normalizeSearch(s) {
 module.exports = cds.service.impl(function() {
   validateEnvironmentVariables();
 
+  // Tenants READ handler - returns configured tenant list (no secrets)
+  this.on('READ', 'Tenants', async (req) => {
+    return getTenantsConfig().map(t => ({ id: t.id, label: t.label }));
+  });
 
   // DataStores READ handler - list of datastores on first UI screen
   this.on('READ', 'DataStores', async (req) => {
     try {
-      const accessToken = await getAccessToken();
+      const tenantId = req._.req?.headers?.['x-tenant-id'];
+      const tenant = getTenantConfig(tenantId);
+      const accessToken = await getAccessToken(tenant);
 
       // Request all fields including Visibility to enable filtering
       const apiResponse = await executeHttpRequest(
         {
-          url: `${ENV_CONFIG.API_BASE_URL}/dsretry?$select=DataStoreName,NumberOfMessages,NumberOfOverdueMessages,Visibility`
+          url: `${tenant.apiBaseUrl}/dsretry?$select=DataStoreName,NumberOfMessages,NumberOfOverdueMessages,Visibility`
         },
         {
           method: 'GET',
@@ -283,7 +310,7 @@ module.exports = cds.service.impl(function() {
       const isReadByKey = Object.prototype.hasOwnProperty.call(req.data || {}, 'ID');
       const targetId = isReadByKey ? String(req.data.ID) : null;
 
-      // Resolve parent DataStoreName from navigation 
+      // Resolve parent DataStoreName from navigation
       let dsname = null;
       if (req.params && req.params.length > 0 && req.params[0].DataStoreName) {
         dsname = req.params[0].DataStoreName;
@@ -307,11 +334,14 @@ module.exports = cds.service.impl(function() {
         return req.reject(400, 'DataStoreName parameter is required. Navigate from DataStores list or provide dsname parameter.');
       }
 
+      const tenantId = req._.req?.headers?.['x-tenant-id'];
+      const tenant = getTenantConfig(tenantId);
+
       // Token
-      const accessToken = await getAccessToken();
+      const accessToken = await getAccessToken(tenant);
 
       // Build API URL (encode dsname)
-      const apiUrl = `${ENV_CONFIG.API_BASE_URL}/dsretry?dsname=${encodeURIComponent(dsname)}`;
+      const apiUrl = `${tenant.apiBaseUrl}/dsretry?dsname=${encodeURIComponent(dsname)}`;
 
       const apiResponse = await executeHttpRequest(
         { url: apiUrl },
@@ -363,7 +393,7 @@ module.exports = cds.service.impl(function() {
         
         // Load error and headers for the requested entry
         try {
-          const errorApiUrl = `${ENV_CONFIG.API_BASE_URL}/dsentry?dsname=${encodeURIComponent(dsname)}&dsentry=${encodeURIComponent(matched.ID)}`;
+          const errorApiUrl = `${tenant.apiBaseUrl}/dsentry?dsname=${encodeURIComponent(dsname)}&dsentry=${encodeURIComponent(matched.ID)}`;
           const errorResponse = await executeHttpRequest(
             { url: errorApiUrl },
             {
@@ -602,7 +632,7 @@ module.exports = cds.service.impl(function() {
       // Get the context of the entry
       let entryId = null;
       let dsname = null;
-      
+
       // Extract from params (bound action context)
       if (req.params && req.params.length > 0) {
         if (req.params.length > 1) {
@@ -613,20 +643,21 @@ module.exports = cds.service.impl(function() {
           dsname = req.params[0].DataStoreName;
         }
       }
-      
+
       if (!entryId || !dsname) {
         return req.reject(400, 'Entry ID and DataStoreName are required');
       }
-      
-      // Payload is not passed with bound actions, so we need to fetch it from API
-      // Get Bearer Token
-      const accessToken = await getAccessToken();
+
+      const tenantId = req._.req?.headers?.['x-tenant-id'];
+      const tenant = getTenantConfig(tenantId);
+
+      const accessToken = await getAccessToken(tenant);
       if (!accessToken) {
         return req.reject(500, 'No access token');
       }
-      
+
       // Fetch the entry from API
-      const apiUrl = `${ENV_CONFIG.API_BASE_URL}/dsentry?dsname=${encodeURIComponent(dsname)}&dsentry=${encodeURIComponent(entryId)}`;
+      const apiUrl = `${tenant.apiBaseUrl}/dsentry?dsname=${encodeURIComponent(dsname)}&dsentry=${encodeURIComponent(entryId)}`;
       
       const apiResponse = await executeHttpRequest(
         { url: apiUrl },
@@ -678,22 +709,24 @@ module.exports = cds.service.impl(function() {
   this.on('DeleteEntries', async (req) => {
     try {
       const { entryIds, dataStoreName } = req.data;
-      
+
       if (!dataStoreName || !Array.isArray(entryIds) || entryIds.length === 0) {
         return req.reject(400, 'DataStoreName and entryIds are required');
       }
-      
-      // Get Bearer Token
-      const accessToken = await getAccessToken();
+
+      const tenantId = req._.req?.headers?.['x-tenant-id'];
+      const tenant = getTenantConfig(tenantId);
+
+      const accessToken = await getAccessToken(tenant);
       if (!accessToken) {
         return req.reject(500, 'Authentication failed');
       }
-      
+
       // Fetch CSRF token manually for /dsentry — a GET to this endpoint without
       // the dsentry parameter returns an error status, which causes the SDK's
       // auto-CSRF preflight to throw. The token is still present in the headers
       // of the error response, so we use validateStatus to ignore the status code.
-      const deleteUrl = `${ENV_CONFIG.API_BASE_URL}/dsentry?dsname=${encodeURIComponent(dataStoreName)}`;
+      const deleteUrl = `${tenant.apiBaseUrl}/dsentry?dsname=${encodeURIComponent(dataStoreName)}`;
       const csrfResponse = await executeHttpRequest(
         { url: deleteUrl },
         {
@@ -754,14 +787,16 @@ module.exports = cds.service.impl(function() {
         return req.reject(400, 'dataStoreName and entryIds are required');
       }
 
-      // Get Bearer Token
-      const accessToken = await getAccessToken();
+      const tenantId = req._.req?.headers?.['x-tenant-id'];
+      const tenant = getTenantConfig(tenantId);
+
+      const accessToken = await getAccessToken(tenant);
       if (!accessToken) {
         return req.reject(500, 'Authentication failed');
       }
 
       // Call move-to-no-retry API using the current datastore
-      const moveUrl = `${ENV_CONFIG.API_BASE_URL}/dsretry?dsname=${encodeURIComponent(dataStoreName)}`;
+      const moveUrl = `${tenant.apiBaseUrl}/dsretry?dsname=${encodeURIComponent(dataStoreName)}`;
       const moveResponse = await executeHttpRequest(
         { url: moveUrl },
         {
@@ -800,14 +835,16 @@ module.exports = cds.service.impl(function() {
         return req.reject(400, 'dataStoreName, targetDataStoreName and entryIds are required');
       }
 
-      // Bearer token
-      const accessToken = await getAccessToken();
+      const tenantId = req._.req?.headers?.['x-tenant-id'];
+      const tenant = getTenantConfig(tenantId);
+
+      const accessToken = await getAccessToken(tenant);
       if (!accessToken) {
         return req.reject(500, 'Authentication failed');
       }
 
       // PUT move
-      const moveUrl = `${ENV_CONFIG.API_BASE_URL}/dsretry?dsname=${encodeURIComponent(dataStoreName)}&trg-dsname=${encodeURIComponent(targetDataStoreName)}`;
+      const moveUrl = `${tenant.apiBaseUrl}/dsretry?dsname=${encodeURIComponent(dataStoreName)}&trg-dsname=${encodeURIComponent(targetDataStoreName)}`;
       const moveResponse = await executeHttpRequest(
         { url: moveUrl },
         {
@@ -843,14 +880,16 @@ module.exports = cds.service.impl(function() {
         return req.reject(400, 'dataStoreName and non-empty entryIds array are required');
       }
 
-      // Get Bearer Token
-      const accessToken = await getAccessToken();
+      const tenantId = req._.req?.headers?.['x-tenant-id'];
+      const tenant = getTenantConfig(tenantId);
+
+      const accessToken = await getAccessToken(tenant);
       if (!accessToken) {
         return req.reject(500, 'Authentication failed: no access token');
       }
 
       // POST restart API with IDs in body
-      const restartUrl = `${ENV_CONFIG.API_BASE_URL}/dsretry?dsname=${encodeURIComponent(dataStoreName)}`;
+      const restartUrl = `${tenant.apiBaseUrl}/dsretry?dsname=${encodeURIComponent(dataStoreName)}`;
       const restartResponse = await executeHttpRequest(
         { url: restartUrl },
         {
