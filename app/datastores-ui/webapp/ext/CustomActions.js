@@ -332,6 +332,17 @@ sap.ui.define([], function () {
                 }
                 sessionStorage.setItem("datastores_tenantId", sSelected);
                 oDialog.close();
+                var oSelectedItem = oSelect.getSelectedItem();
+                var sLabel = oSelectedItem ? oSelectedItem.getText() : sSelected;
+                sap.ui.require(["sap/ui/core/Element"], function (Element) {
+                  if (Element.registry && typeof Element.registry.filter === "function") {
+                    Element.registry.filter(function (oEl) {
+                      return oEl.isA && oEl.isA("sap.m.Button") &&
+                             typeof oEl.getId === "function" &&
+                             oEl.getId().indexOf("SwitchTenant") !== -1;
+                    }).forEach(function (oBtn) { oBtn.setText(sLabel + "  ▾"); });
+                  }
+                });
                 window.location.reload();
               }
             }),
