@@ -34,6 +34,11 @@ sap.ui.define(
                                 tenants: aTenants,
                                 selectedTenantId: sTenantId || ""
                             }), "tenantModel");
+
+                            var oActive = aTenants.find(function (t) { return t.id === sTenantId; }) || aTenants[0];
+                            if (oActive) {
+                                that._updateTenantButtonText(oActive.label);
+                            }
                         })
                         .catch(function (e) {
                             console.error("[Tenant] Failed to load tenants:", e);
@@ -48,6 +53,23 @@ sap.ui.define(
                     oLink.href = sPath;
                     document.head.appendChild(oLink);
                 }
+            },
+
+            _updateTenantButtonText: function (sLabel) {
+                sap.ui.require(["sap/ui/core/Element"], function (Element) {
+                    var sText = sLabel + "  ▾";
+                    function applyText() {
+                        if (Element.registry && typeof Element.registry.filter === "function") {
+                            Element.registry.filter(function (oEl) {
+                                return oEl.isA && oEl.isA("sap.m.Button") &&
+                                       typeof oEl.getId === "function" &&
+                                       oEl.getId().indexOf("SwitchTenant") !== -1;
+                            }).forEach(function (oBtn) { oBtn.setText(sText); });
+                        }
+                    }
+                    applyText();
+                    setTimeout(applyText, 500);
+                });
             }
         });
     }
